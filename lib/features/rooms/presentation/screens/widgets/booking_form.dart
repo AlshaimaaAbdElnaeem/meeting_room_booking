@@ -23,14 +23,16 @@ class BookingForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<BookingsCubit>();
 
-   return BlocBuilder<BookingsCubit, BookingsState>(
-  buildWhen: (prev, curr) =>
-      prev.selectedDate != curr.selectedDate ||
-      prev.startTime != curr.startTime ||
-      prev.endTime != curr.endTime ||
-      prev.isLoading != curr.isLoading ||
-      prev.errorMessage != curr.errorMessage,
-  builder: (context, state) {
+    return BlocBuilder<BookingsCubit, BookingsState>(
+      buildWhen: (prev, curr) =>
+          prev.selectedDate != curr.selectedDate ||
+          prev.startTime != curr.startTime ||
+          prev.endTime != curr.endTime ||
+          prev.isLoading != curr.isLoading ||
+          prev.errorMessage != curr.errorMessage ||
+          prev.bookings != curr.bookings,
+
+      builder: (context, state) {
         return Container(
           padding: EdgeInsets.all(20.r),
           decoration: BoxDecoration(
@@ -46,7 +48,7 @@ class BookingForm extends StatelessWidget {
                 Text('New Booking', style: AppTextStyles.h2),
                 SizedBox(height: 20.h),
 
-                // NAME
+                // ---------------- NAME ----------------
                 Text('Your name', style: AppTextStyles.bodySecondary),
                 SizedBox(height: 6.h),
                 TextFormField(
@@ -61,6 +63,7 @@ class BookingForm extends StatelessWidget {
 
                 SizedBox(height: 16.h),
 
+                // ---------------- DATE ----------------
                 Text('Date', style: AppTextStyles.bodySecondary),
                 SizedBox(height: 6.h),
                 PickerField(
@@ -72,7 +75,7 @@ class BookingForm extends StatelessWidget {
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now(),
+                      initialDate: state.selectedDate ?? DateTime.now(),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
@@ -85,7 +88,6 @@ class BookingForm extends StatelessWidget {
 
                 SizedBox(height: 16.h),
 
-                // TIMES
                 Row(
                   children: [
                     Expanded(
@@ -96,7 +98,8 @@ class BookingForm extends StatelessWidget {
                         onTap: () async {
                           final picked = await showTimePicker(
                             context: context,
-                            initialTime: TimeOfDay.now(),
+                            initialTime:
+                                state.startTime ?? TimeOfDay.now(),
                           );
 
                           if (picked != null) {
@@ -105,19 +108,7 @@ class BookingForm extends StatelessWidget {
                         },
                       ),
                     ),
-                    if (state.errorMessage != null)
-  Padding(
-    padding: EdgeInsets.only(top: 12.h),
-    child: Text(
-      state.errorMessage!,
-      style: TextStyle(
-        color: Colors.red,
-        fontSize: 12.sp,
-      ),
-    ),
-  ),
                     SizedBox(width: 12.w),
-
                     Expanded(
                       child: PickerField(
                         value: state.endTime?.format(context),
@@ -126,7 +117,10 @@ class BookingForm extends StatelessWidget {
                         onTap: () async {
                           final picked = await showTimePicker(
                             context: context,
-                            initialTime: TimeOfDay.now(),
+                            initialTime:
+                                state.endTime ??
+                                state.startTime ??
+                                TimeOfDay.now(),
                           );
 
                           if (picked != null) {
@@ -137,33 +131,41 @@ class BookingForm extends StatelessWidget {
                     ),
                   ],
                 ),
-if (state.errorMessage != null)
-  Padding(
-    padding: EdgeInsets.only(top: 12.h),
-    child: Text(
-      state.errorMessage!,
-      style: TextStyle(
-        color: Colors.red,
-        fontSize: 12.sp,
-      ),
-    ),
-  ),
+
+                // ---------------- ERROR ----------------
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 12.h),
+                    child: Text(
+                      state.errorMessage!,
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ),
+
                 SizedBox(height: 24.h),
 
-                // SUBMIT
                 SizedBox(
                   width: double.infinity,
                   height: 52.h,
-             child: SizedBox(
-  width: double.infinity,
-  height: 52.h,
-  child: ElevatedButton(
-    onPressed: state.isLoading ? null : onSubmit,
-    child: state.isLoading
-        ? const CircularProgressIndicator(color: Colors.white)
-        : Text('Confirm Booking', style: AppTextStyles.button),
-  ),
-),
+                  child: ElevatedButton(
+                    onPressed: state.isLoading ? null : onSubmit,
+                    child: state.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'Confirm Booking',
+                            style: AppTextStyles.button,
+                          ),
+                  ),
                 ),
               ],
             ),

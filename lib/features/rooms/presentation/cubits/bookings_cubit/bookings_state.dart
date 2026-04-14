@@ -2,16 +2,17 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:meeting_room_booking/features/rooms/data/models/booking_model.dart';
 
+enum BookingStatus { initial, success, error }
+
 class BookingsState extends Equatable {
   final List<BookingModel> bookings;
-
   final DateTime? selectedDate;
   final TimeOfDay? startTime;
   final TimeOfDay? endTime;
-
   final bool isLoading;
   final String? errorMessage;
-  final BookingModel? createdBooking;
+  final BookingStatus status; 
+
 
   const BookingsState({
     this.bookings = const [],
@@ -20,7 +21,7 @@ class BookingsState extends Equatable {
     this.endTime,
     this.isLoading = false,
     this.errorMessage,
-    this.createdBooking,
+    this.status = BookingStatus.initial,
   });
 
   BookingsState copyWith({
@@ -30,29 +31,25 @@ class BookingsState extends Equatable {
     TimeOfDay? endTime,
     bool? isLoading,
     String? errorMessage,
-    BookingModel? createdBooking,
     bool clearError = false,
-    bool clearCreated = false,
+    BookingStatus? status,
+    bool clearDateTime = false,
+
   }) {
     return BookingsState(
       bookings: bookings ?? this.bookings,
-      selectedDate: selectedDate ?? this.selectedDate,
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
+      selectedDate: clearDateTime ? null : selectedDate ?? this.selectedDate,
+      startTime:clearDateTime ? null : startTime ?? this.startTime,
+      endTime: clearDateTime ? null : endTime ?? this.endTime,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-      createdBooking: clearCreated ? null : createdBooking ?? this.createdBooking,
+      status: status ?? this.status,
     );
   }
 
   @override
   List<Object?> get props => [
-        bookings,
-        selectedDate,
-        startTime,
-        endTime,
-        isLoading,
-        errorMessage,
-        createdBooking,
+        bookings, selectedDate, startTime, endTime,
+        isLoading, errorMessage, status,
       ];
 }

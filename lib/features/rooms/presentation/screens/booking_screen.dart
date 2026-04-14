@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meeting_room_booking/core/theme/app_colors.dart';
 import 'package:meeting_room_booking/core/theme/app_text_styles.dart';
-import 'package:meeting_room_booking/core/widgets/error_widget.dart';
 import 'package:meeting_room_booking/core/widgets/loading_widget.dart';
 import 'package:meeting_room_booking/features/rooms/data/models/room_model.dart';
 import 'package:meeting_room_booking/features/rooms/presentation/cubits/bookings_cubit/bookings_cubit.dart';
@@ -43,41 +42,19 @@ class BookingScreen extends StatelessWidget {
  void _listener(BuildContext context, BookingsState state) {
   final cubit = context.read<BookingsCubit>();
 
-  // Booking success
-  if (state.createdBooking != null) {
-    _showSnackBar(
-      context,
-      'Booking confirmed!',
-      AppColors.primary,
-    );
-
-    cubit.getBookings(room.id!);
-
-   
-    cubit.clearStatus();
+  if (state.status == BookingStatus.success) {
+    _showSnackBar(context, 'Booking confirmed!', AppColors.primary);
+    cubit.clearStatus(); 
   }
 
-  // Error handling
-  if (state.errorMessage != null) {
-    _showSnackBar(
-      context,
-      state.errorMessage!,
-      AppColors.error,
-    );
-
+  if (state.status == BookingStatus.error && state.errorMessage != null) {
+    _showSnackBar(context, state.errorMessage!, AppColors.error);
     cubit.clearStatus();
   }
 }
 
   Widget _builder(BuildContext context, BookingsState state) {
    if (state.isLoading) return const LoadingWidget();
-
-  if (state.errorMessage != null) {
-    return AppErrorWidget(
-      message: state.errorMessage!,
-      onRetry: () => context.read<BookingsCubit>().getBookings(room.id!),
-    );
-  }
 
   return _BookingBody(room: room);
   }
@@ -112,13 +89,19 @@ final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 @override
   void dispose() {
     nameController.dispose();
+
     super.dispose();
   }
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<BookingsCubit>();
     final state = context.watch<BookingsCubit>().state;
-
+  if (state.status == BookingStatus.success) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameController.clear();
+      formKey.currentState?.reset();
+    });
+  }
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.r),
       child: Column(
@@ -140,7 +123,7 @@ final GlobalKey<FormState> formKey = GlobalKey<FormState>();
           SizedBox(height: 24.h),
 
           ExistingBookingsList(
-            bookings: state.bookings,
+            bookings: state.bookings.reversed.toList(),
           ),
         ],
       ),

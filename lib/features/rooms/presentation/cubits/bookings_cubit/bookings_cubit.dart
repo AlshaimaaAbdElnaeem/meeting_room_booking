@@ -24,7 +24,7 @@ class BookingsCubit extends Cubit<BookingsState> {
       )),
       (bookings) => emit(state.copyWith(
         isLoading: false,
-        bookings: bookings,
+        bookings: List.from(bookings),
       )),
     );
   }
@@ -103,28 +103,33 @@ Future<void> submitBooking({
   await _createBooking(booking);
 }
   // ---------------- CREATE ----------------
-  Future<void> _createBooking(BookingModel booking) async {
-    emit(state.copyWith(isLoading: true, clearError: true));
+Future<void> _createBooking(BookingModel booking) async {
+  emit(state.copyWith(isLoading: true, clearError: true));
 
-    final result = await roomRepository.createBooking(booking);
+  final result = await roomRepository.createBooking(booking);
 
-    result.fold(
-      (failure) => emit(state.copyWith(
+  result.fold(
+    (failure) => emit(state.copyWith(
+      isLoading: false,
+      errorMessage: failure.message,
+      status: BookingStatus.error,
+    )),
+    (newBooking) {
+      emit(state.copyWith(
         isLoading: false,
-        errorMessage: failure.message,
-      )),
-      (newBooking) {
-        emit(state.copyWith(
-          isLoading: false,
-          bookings: [...state.bookings, newBooking],
-          createdBooking: newBooking,
-        ));
-      },
-    );
-  }
+        bookings: List.from([...state.bookings, newBooking]),
+        status: BookingStatus.success, 
+      ));
+    },
+  );
+}
+// ---------------- CLEAR ----------------
+void clearStatus() {
+  emit(state.copyWith(
+    clearError: true,
+    status: BookingStatus.initial,
+    clearDateTime: true,
+  ));
+}
 
-  // ---------------- CLEAR ----------------
-  void clearStatus() {
-    emit(state.copyWith(clearError: true, clearCreated: true));
-  }
 }

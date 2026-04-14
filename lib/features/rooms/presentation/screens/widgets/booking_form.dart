@@ -30,7 +30,8 @@ class BookingForm extends StatelessWidget {
           prev.endTime != curr.endTime ||
           prev.isLoading != curr.isLoading ||
           prev.errorMessage != curr.errorMessage ||
-          prev.bookings != curr.bookings,
+          prev.bookings != curr.bookings||
+          prev.status != curr.status,
 
       builder: (context, state) {
         return Container(

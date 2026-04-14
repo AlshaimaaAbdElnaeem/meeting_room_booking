@@ -9,17 +9,21 @@ class DioConsumer extends ApiService {
   DioConsumer(this.dio) {
     dio.options = BaseOptions(
       baseUrl: EndPoints.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       headers: {'Content-Type': 'application/json'},
     );
   }
 
   @override
-  Future<dynamic> get({
-    required String endPoint,
-    Map<String, dynamic>? queryParameters,
-  }) async {
+ @override
+Future<dynamic> get({
+  required String endPoint,
+  Map<String, dynamic>? queryParameters,
+}) async {
+  int retries = 3;
+  
+  for (int i = 0; i < retries; i++) {
     try {
       final response = await dio.get(
         endPoint,
@@ -27,9 +31,11 @@ class DioConsumer extends ApiService {
       );
       return response.data;
     } on DioException catch (e) {
-      throw _handleDioException(e);
+      if (i == retries - 1) throw _handleDioException(e); 
+      await Future.delayed(Duration(seconds: 2 * (i + 1))); 
     }
   }
+}
 
   @override
   Future<dynamic> post({
